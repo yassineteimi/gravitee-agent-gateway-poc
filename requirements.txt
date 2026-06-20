@@ -1,0 +1,6 @@
+mkdocs-material==9.5.49
+mkdocs==1.6.1
+# pymdown-extensions 10.14 + Markdown 3.x silently dropped bare ```lang fences
+# (superfences rendered them as inline code). 10.21.3 fixes it.
+pymdown-extensions==10.21.3
+markdown==3.9

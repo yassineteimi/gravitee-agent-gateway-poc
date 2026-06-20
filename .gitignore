@@ -1,0 +1,29 @@
+# ---- Secrets (NEVER commit) ----
+.env
+.env.*
+!.env.example
+*.token
+*.key
+*-key.json
+*.license
+kubeconfig
+*.kubeconfig
+
+# ---- MkDocs build output ----
+site/
+
+# ---- Python / venv ----
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# ---- Local cluster / tooling state ----
+poc/cluster/*.local.yaml
+poc/**/*.rendered.yaml
+
+# ---- OS / editor ----
+.DS_Store
+*.swp
+.idea/
+.vscode/

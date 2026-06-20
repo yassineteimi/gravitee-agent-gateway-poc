@@ -1,0 +1,90 @@
+site_name: "Gravitee Agent Gateway PoC"
+
+nav:
+  - Overview: index.md
+  - Prerequisites: prerequisites.md
+  - Architecture: architecture.md
+  - Bootstrap (M0): bootstrap.md
+  - The Three Gates:
+    - "Gate 1: API Gateway": gates/api-gateway.md
+    - "Gate 2: AI / Agent Gateway": gates/ai-agent-gateway.md
+    - "Gate 3: Event Gateway": gates/event-gateway.md
+  - Unified Demo: unified-demo.md
+  - Observability: observability.md
+  - Evaluation Notes: evaluation.md
+
+site_author: Yassine TEIMI
+site_description: >-
+  A homelab benchmark of Gravitee across three enforcement points: an API Gateway
+  (auth, plans, rate limit and quota), an AI / Agent Gateway (LLM, MCP and A2A
+  governance), and an event-native Kafka Gateway. GitOps-first with ArgoCD on a
+  local Kubernetes cluster: declarative authentication, rate limiting, LLM prompt
+  guardrails and token controls, MCP and agent access control, and access control
+  on native Kafka streams.
+
+repo_name: yassineteimi/gravitee-agent-gateway-poc
+repo_url: https://github.com/yassineteimi/gravitee-agent-gateway-poc
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  language: en
+  palette:
+    - scheme: slate
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+      primary: teal
+      accent: lime
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+      primary: teal
+      accent: purple
+
+extra_css:
+  - stylesheets/terminal.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github-alt
+      link: https://github.com/yassineteimi
+    - icon: fontawesome/brands/linkedin
+      link: https://linkedin.com/in/yassine-teimi
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.mark
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+
+plugins:
+  - search
+
+copyright: |
+  &copy; 2026 <a href="https://github.com/yassineteimi" target="_blank" rel="noopener">Yassine TEIMI</a>
