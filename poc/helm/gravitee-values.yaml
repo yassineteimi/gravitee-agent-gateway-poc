@@ -18,6 +18,13 @@ global:
 mongodb:
   enabled: true
   replicaCount: 1
+  # The init containers still default to the now-deleted bitnami/os-shell image,
+  # so repoint them at the legacy repo too. volumePermissions chowns the data
+  # volume for the non-root mongodb user (kind's local storage ignores fsGroup).
+  volumePermissions:
+    enabled: true
+    image:
+      repository: bitnamilegacy/os-shell
   resources:
     requests:
       cpu: 100m
@@ -53,6 +60,14 @@ elasticsearch:
     replicaCount: 0
   ingest:
     replicaCount: 0
+  # Same os-shell fix as MongoDB: the sysctl init (sets vm.max_map_count for ES)
+  # and the volume-permissions init both default to the deleted bitnami/os-shell.
+  sysctlImage:
+    repository: bitnamilegacy/os-shell
+  volumePermissions:
+    enabled: true
+    image:
+      repository: bitnamilegacy/os-shell
 
 # Point Gravitee's ES reporter at the single master node (the chart default
 # targets an ingest-only service that no longer exists in this topology).
