@@ -6,6 +6,14 @@
 # hard for a 16 GiB Colima VM: a single-member MongoDB replica set and a
 # single-node Elasticsearch.
 
+# Bitnami moved its free images to the "bitnamilegacy" repo in 2025, and the
+# mongodb / elasticsearch subcharts now refuse those images unless you opt in.
+# For a homelab PoC that is acceptable; a production install would pin its own
+# Mongo/ES images (or run external managed datastores) instead.
+global:
+  security:
+    allowInsecureImages: true
+
 # ---- MongoDB: the config / management repository (mandatory) ----
 mongodb:
   enabled: true
