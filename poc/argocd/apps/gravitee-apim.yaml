@@ -1,0 +1,30 @@
+# Gravitee APIM (OSS). Multi-source Application: the chart comes from the
+# Gravitee Helm repo, while the values overlay is read from this git repo, so
+# the runtime config stays version-controlled and reviewable alongside the docs.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gravitee-apim
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://helm.gravitee.io
+      chart: apim
+      targetRevision: 4.11.11
+      helm:
+        valueFiles:
+          - $values/poc/helm/gravitee-values.yaml
+    - repoURL: https://github.com/yassineteimi/gravitee-agent-gateway-poc
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gravitee
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

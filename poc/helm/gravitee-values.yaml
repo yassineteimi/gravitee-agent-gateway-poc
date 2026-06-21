@@ -1,0 +1,94 @@
+# OSS values overlay for graviteeio/apim 4.11.11 on a local kind homelab.
+#
+# No license is supplied here, so Enterprise features (AI Gateway, Kafka
+# Gateway) stay off by design. The OSS->EE upgrade (license injection) is a
+# later milestone. Datastores are the chart's bundled subcharts, sized down
+# hard for a 16 GiB Colima VM: a single-member MongoDB replica set and a
+# single-node Elasticsearch.
+
+# ---- MongoDB: the config / management repository (mandatory) ----
+mongodb:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+  persistence:
+    enabled: true
+    size: 1Gi
+
+# ---- Elasticsearch: the analytics / logs store, collapsed to ONE node ----
+# masterOnly:false lets the single master node also serve the data + ingest
+# roles, so we run one ES pod instead of the 6-pod default cluster.
+elasticsearch:
+  enabled: true
+  master:
+    masterOnly: false
+    replicaCount: 1
+    heapSize: 512m
+    resources:
+      requests:
+        cpu: 100m
+        memory: 768Mi
+      limits:
+        cpu: "1"
+        memory: 1536Mi
+    persistence:
+      size: 4Gi
+  data:
+    replicaCount: 0
+  coordinating:
+    replicaCount: 0
+  ingest:
+    replicaCount: 0
+
+# Point Gravitee's ES reporter at the single master node (the chart default
+# targets an ingest-only service that no longer exists in this topology).
+es:
+  enabled: true
+  endpoints:
+    - http://graviteeio-apim-elasticsearch-master-hl:9200
+  security:
+    enabled: false
+  settings:
+    number_of_shards: 1
+    number_of_replicas: 0
+
+# ---- Control plane: Management API + Console + Developer Portal ----
+# One local host, path-routed: /management, /console, and / (portal).
+api:
+  ingress:
+    management:
+      enabled: true
+      scheme: http
+      ingressClassName: nginx
+      hosts:
+        - console.gravitee.local
+
+ui:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - console.gravitee.local
+
+portal:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - console.gravitee.local
+
+# ---- Data plane: the API Gateway on its own host ----
+# Kept off the control-plane host so its "/" route does not collide with the
+# Developer Portal's "/" route.
+gateway:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - gateway.gravitee.local
