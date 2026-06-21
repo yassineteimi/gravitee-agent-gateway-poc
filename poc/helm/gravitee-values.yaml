@@ -15,26 +15,17 @@ global:
     allowInsecureImages: true
 
 # ---- MongoDB: the config / management repository (mandatory) ----
+# The chart's bundled Bitnami MongoDB is DISABLED: its bitnamilegacy 6.0.13
+# re-tag ships /opt/bitnami config files unreadable by its own non-root uid
+# (readOnlyRootFilesystem + runAsUser 1001), so it crash-loops on a permission
+# error no Helm value fixes. Instead we run a standalone official mongo:6.0
+# (poc/datastores/mongodb, its own ArgoCD app) and point Gravitee at it here.
 mongodb:
-  enabled: true
-  replicaCount: 1
-  # The init containers still default to the now-deleted bitnami/os-shell image,
-  # so repoint them at the legacy repo too. volumePermissions chowns the data
-  # volume for the non-root mongodb user (kind's local storage ignores fsGroup).
-  volumePermissions:
-    enabled: true
-    image:
-      repository: bitnamilegacy/os-shell
-  resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
-      cpu: "1"
-      memory: 512Mi
-  persistence:
-    enabled: true
-    size: 1Gi
+  enabled: false
+
+mongo:
+  uri: mongodb://mongodb:27017/gravitee
+  rsEnabled: false
 
 # ---- Elasticsearch: the analytics / logs store, collapsed to ONE node ----
 # masterOnly:false lets the single master node also serve the data + ingest

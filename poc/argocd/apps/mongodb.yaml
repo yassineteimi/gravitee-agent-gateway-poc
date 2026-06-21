@@ -1,0 +1,22 @@
+# Standalone MongoDB, GitOps-managed like everything else. Replaces the chart's
+# bundled Bitnami MongoDB (see poc/datastores/mongodb/mongodb.yaml for why).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mongodb
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/yassineteimi/gravitee-agent-gateway-poc
+    targetRevision: main
+    path: poc/datastores/mongodb
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gravitee
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
