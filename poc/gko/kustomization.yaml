@@ -1,0 +1,41 @@
+# GKO installed via a Kustomize overlay that inflates the official Helm chart
+# and patches in GODEBUG=fips140=off. The operator's FIPS-140 Go build corrupts
+# memory and panics intermittently on this arm64 node (in metrics-cert and
+# webhook-TLS crypto paths); disabling FIPS routes crypto to the standard
+# implementation and makes the operator stable. The chart exposes no env knob,
+# hence the patch. ArgoCD renders this with `kustomize build --enable-helm`.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+helmCharts:
+  - name: gko
+    repo: https://helm.gravitee.io
+    version: 4.11.10
+    releaseName: gko
+    namespace: gko-system
+    valuesInline:
+      manager:
+        scope:
+          cluster: true
+        # Metrics server self-generates an RSA cert at startup; that keygen is
+        # one of the FIPS crash sites. Not needed for the PoC.
+        metrics:
+          enabled: false
+
+patches:
+  - target:
+      kind: Deployment
+      name: gko-controller-manager
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: gko-controller-manager
+      spec:
+        template:
+          spec:
+            containers:
+              - name: manager
+                env:
+                  - name: GODEBUG
+                    value: fips140=off

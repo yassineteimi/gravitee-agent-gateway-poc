@@ -4,6 +4,10 @@
 # which pushes them to the Management API so they also appear in the Console and
 # Developer Portal. sync-wave -1 makes the operator (and its CRDs) land before
 # the Gate 1 custom resources that depend on them.
+#
+# Sourced from a Kustomize overlay (poc/gko) rather than the Helm chart directly:
+# the overlay inflates the same chart but patches in GODEBUG=fips140=off, which
+# the chart cannot express and which the operator needs to stay stable on arm64.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -14,23 +18,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://helm.gravitee.io
-    chart: gko
-    targetRevision: 4.11.10
-    helm:
-      values: |
-        manager:
-          scope:
-            cluster: true
-          # The metrics server self-generates an RSA TLS cert at startup, which
-          # panics on this arm64 node via Go's FIPS-140 crypto
-          # (slice-bounds-out-of-range in crypto/internal/fips140) and crash-loops
-          # the operator. This chart build does not wire metrics.secured to a flag,
-          # so the only effective fix is to disable the operator's own metrics
-          # server. We do not need it for the PoC; revisit at the observability
-          # milestone if GKO self-metrics are wanted.
-          metrics:
-            enabled: false
+    repoURL: https://github.com/yassineteimi/gravitee-agent-gateway-poc
+    targetRevision: main
+    path: poc/gko
   destination:
     server: https://kubernetes.default.svc
     namespace: gko-system
