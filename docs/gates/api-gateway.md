@@ -246,6 +246,72 @@ Try it:
     --resolve gateway.gravitee.local:80:127.0.0.1 http://gateway.gravitee.local/echo
 ```
 
+## A second auth method: JWT
+
+An API can publish more than one plan, and the gateway selects which to apply by
+the credential the caller presents. The Echo API gets a second plan, **JWT**,
+alongside the API-key plan: an `X-Gravitee-Api-Key` header still matches the
+API-key plan, while an `Authorization: Bearer <token>` matches this one.
+
+The contrast is the interesting part. A JWT is validated against an external
+issuer, so the credential is the caller's own signed token, not a
+Gravitee-generated secret. That makes the subscription **fully declarative**: the
+consumer and its subscription are committed with nothing sensitive in them, unlike
+the API-key plan that needed a runtime-minted key kept out of git.
+
+```yaml title="poc/gate1-api/echo-api.yaml (excerpt)"
+    JWT:
+      name: "JWT plan"
+      status: PUBLISHED
+      security:
+        type: "JWT"
+        configuration:
+          signature: "RSA_RS256"
+          publicKeyResolver: "GIVEN_KEY"
+          resolverParameter: |
+            -----BEGIN PUBLIC KEY-----
+            ...the public key; the private half stays in the gitignored .env...
+            -----END PUBLIC KEY-----
+          clientIdClaim: "client_id"
+```
+
+```yaml title="poc/gate1-api/jwt-consumer.yaml"
+kind: Application
+spec:
+  name: "Echo JWT Consumer"
+  settings:
+    app:
+      clientId: "echo-jwt-client"   # matched against the token's client_id claim
+---
+kind: Subscription
+spec:
+  api: { name: echo-api }
+  application: { name: echo-jwt-consumer }
+  plan: JWT                          # no key, no secret committed
+```
+
+The gateway validates the RS256 signature itself with the public key in the plan.
+A small script mints a demo token signed by the private key, and enforcement
+holds: no credential is rejected, a valid token passes.
+
+```{ .sh .terminal }
+$ JWT=$(./poc/scripts/gate1-mint-jwt.sh)
+$ curl -s -o /dev/null -w "no credential: %{http_code}\n" \
+    --resolve gateway.gravitee.local:80:127.0.0.1 http://gateway.gravitee.local/echo
+$ curl -s -o /dev/null -w "valid JWT:     %{http_code}\n" -H "Authorization: Bearer $JWT" \
+    --resolve gateway.gravitee.local:80:127.0.0.1 http://gateway.gravitee.local/echo
+```
+
+```text title="Expected output"
+no credential: 401
+valid JWT:     200
+```
+
+!!! note "JWT is open source"
+    Confirmed empirically on this license-free install: a JWT plan is accepted and
+    enforced with no Enterprise license. JWT and OAuth2 are core gateway security;
+    only the AI and Kafka gates need EE.
+
 ## Self-service: the Developer Portal
 
 The API is published with public visibility, so it appears in the Developer
@@ -268,8 +334,13 @@ Healthy.
 
 ## What Gate 1 establishes
 
-- A v4 proxy API, an authentication Plan, a rate-limit policy, and a Developer
-  Portal, all declared as Kubernetes resources and reconciled by GKO and ArgoCD.
+- A v4 proxy API, two authentication Plans (API key and JWT), a rate-limit
+  policy, and a Developer Portal, all declared as Kubernetes resources and
+  reconciled by GKO and ArgoCD.
+- A secret-hygiene contrast worth keeping: API-key subscriptions carry a
+  Gravitee-minted secret (kept out of git, created at runtime), while JWT and
+  OAuth2 subscriptions are fully declarative because the credential is the
+  caller's own token.
 - Honest findings worth carrying forward: the operator needs `GODEBUG=fips140=off`
   on arm64; the published CRD quickstart is incomplete (`inheritConfiguration`,
   `secondary`, `flowExecution`); and API keys stay out of git as runtime secrets.
