@@ -22,6 +22,13 @@ spec:
         manager:
           scope:
             cluster: true
+          # The metrics server defaults to self-generating an RSA TLS cert at
+          # startup, which panics on this arm64 node via Go's FIPS-140 crypto
+          # (slice-bounds-out-of-range in crypto/internal/fips140) and crash-loops
+          # the operator. Serve metrics over plain HTTP to skip that keygen; for a
+          # homelab the metrics endpoint does not need TLS.
+          metrics:
+            secured: false
   destination:
     server: https://kubernetes.default.svc
     namespace: gko-system
