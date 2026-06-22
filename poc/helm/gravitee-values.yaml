@@ -82,6 +82,15 @@ api:
       ingressClassName: nginx
       hosts:
         - console.gravitee.local
+    # The Portal REST API that backs the Developer Portal UI. Defaulted to
+    # apim.example.com with no ingress class (the M0 leftover); put it on the
+    # control-plane host at /portal so the Portal UI can reach its backend.
+    portal:
+      enabled: true
+      scheme: http
+      ingressClassName: nginx
+      hosts:
+        - console.gravitee.local
 
 ui:
   ingress:
