@@ -1,0 +1,19 @@
+# Links the Gravitee Kubernetes Operator to our Management API. Every declared
+# API references this context by name (spec.contextRef), so GKO knows which
+# control plane to push it to. Credentials come from a Secret injected out of
+# band by poc/scripts/inject-secrets.sh (from the gitignored .env), never
+# committed. Reused by every gate, not just Gate 1.
+apiVersion: gravitee.io/v1alpha1
+kind: ManagementContext
+metadata:
+  name: apim-context
+  namespace: gravitee
+spec:
+  # Qualified service name: GKO runs in the gko-system namespace, so the short
+  # name does not resolve. <service>.<namespace> reaches the Management API.
+  baseUrl: http://gravitee-apim-api.gravitee:83/management
+  environmentId: DEFAULT
+  organizationId: DEFAULT
+  auth:
+    secretRef:
+      name: gravitee-mgmt-context-auth

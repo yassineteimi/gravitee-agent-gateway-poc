@@ -1,0 +1,41 @@
+# Gate 1, the first API: a v4 HTTP proxy declared entirely as a Kubernetes
+# resource. GKO reconciles it into the Management API, so it also appears in the
+# Console and Developer Portal. It proxies gateway path /echo to the in-cluster
+# echo backend. This first cut uses a keyless plan (open access); an API-key
+# plan and rate limiting come next.
+apiVersion: gravitee.io/v1alpha1
+kind: ApiV4Definition
+metadata:
+  name: echo-api
+  namespace: gravitee
+spec:
+  contextRef:
+    name: apim-context
+  name: "Echo API"
+  description: "Gate 1 demo: a v4 HTTP proxy API declared via GKO."
+  version: "1.0"
+  type: PROXY
+  state: STARTED
+  lifecycleState: PUBLISHED
+  visibility: PUBLIC
+  listeners:
+    - type: HTTP
+      paths:
+        - path: "/echo"
+      entrypoints:
+        - type: http-proxy
+          qos: AUTO
+  endpointGroups:
+    - name: default-group
+      type: http-proxy
+      endpoints:
+        - name: echo-backend
+          type: http-proxy
+          configuration:
+            target: http://echo-server:80
+  plans:
+    keyless:
+      name: "Keyless"
+      description: "Open access, no credentials required."
+      security:
+        type: KEY_LESS

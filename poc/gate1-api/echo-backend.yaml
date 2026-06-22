@@ -1,0 +1,50 @@
+# A tiny in-cluster echo backend so the whole Gate 1 demo runs locally, with no
+# dependency on an external endpoint. It returns the received request as JSON,
+# which makes it easy to show that the gateway forwarded the call (headers,
+# path, method all visible in the response).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echo-server
+  namespace: gravitee
+  labels:
+    app: echo-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: echo-server
+  template:
+    metadata:
+      labels:
+        app: echo-server
+    spec:
+      containers:
+        - name: echo-server
+          image: ealen/echo-server:0.9.2
+          ports:
+            - containerPort: 80
+          env:
+            - name: PORT
+              value: "80"
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo-server
+  namespace: gravitee
+  labels:
+    app: echo-server
+spec:
+  selector:
+    app: echo-server
+  ports:
+    - port: 80
+      targetPort: 80

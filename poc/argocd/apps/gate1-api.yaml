@@ -1,0 +1,23 @@
+# Gate 1 resources: the ManagementContext (GKO -> Management API link), the echo
+# backend, and the API definitions. The auth Secret the ManagementContext
+# references is NOT here; it is injected from .env by poc/scripts/inject-secrets.sh.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gate1-api
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/yassineteimi/gravitee-agent-gateway-poc
+    targetRevision: main
+    path: poc/gate1-api
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gravitee
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
