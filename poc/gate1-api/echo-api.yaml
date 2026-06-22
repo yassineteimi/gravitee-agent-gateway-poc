@@ -43,9 +43,38 @@ spec:
   flowExecution:
     mode: DEFAULT
     matchRequired: false
+  # API-level flow: rate limit every request to 5 per 10 seconds. Runs after the
+  # plan's API-key check, so an unauthenticated call is rejected (401) before it
+  # ever reaches this, and an authenticated caller over the limit gets a 429.
+  flows:
+    - name: rate-limit
+      enabled: true
+      selectors:
+        - type: HTTP
+          path: "/"
+          pathOperator: STARTS_WITH
+          methods: []
+      request:
+        - name: Rate Limit
+          description: "5 requests per 10 seconds (demo)"
+          enabled: true
+          policy: rate-limit
+          configuration:
+            async: false
+            addHeaders: true
+            rate:
+              useKeyOnly: false
+              periodTime: 10
+              limit: 5
+              periodTimeUnit: SECONDS
+              key: ""
+      response: []
+      subscribe: []
+      publish: []
   plans:
-    keyless:
-      name: "Keyless"
-      description: "Open access, no credentials required."
+    API_KEY:
+      name: "API Key plan"
+      description: "Requires an API key; rate limited to 5 requests / 10s."
+      status: PUBLISHED
       security:
-        type: KEY_LESS
+        type: API_KEY

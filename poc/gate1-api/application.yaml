@@ -1,0 +1,16 @@
+# A consumer application for the Echo API. In a real flow a developer would
+# register this through the Developer Portal (shown later); declaring it as a
+# CRD here pre-provisions a consumer so we can prove API-key enforcement now.
+apiVersion: gravitee.io/v1alpha1
+kind: Application
+metadata:
+  name: echo-consumer
+  namespace: gravitee
+spec:
+  contextRef:
+    name: apim-context
+  name: "Echo Consumer"
+  description: "Demo consumer application for the Echo API (Gate 1)."
+  settings:
+    app:
+      type: "SIMPLE"
