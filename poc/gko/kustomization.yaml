@@ -13,14 +13,7 @@ helmCharts:
     version: 4.11.10
     releaseName: gko
     namespace: gko-system
-    valuesInline:
-      manager:
-        scope:
-          cluster: true
-        # Metrics server self-generates an RSA cert at startup; that keygen is
-        # one of the FIPS crash sites. Not needed for the PoC.
-        metrics:
-          enabled: false
+    valuesFile: values.yaml
 
 patches:
   - target:

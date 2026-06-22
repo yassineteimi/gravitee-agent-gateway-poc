@@ -1,0 +1,10 @@
+# Helm values for the GKO chart, referenced by kustomization.yaml. Kept in a
+# separate file because kustomize's helmCharts valuesInline mis-marshals nested
+# maps (json: unsupported type: map[interface {}]interface {}).
+manager:
+  scope:
+    cluster: true
+  # Metrics server self-generates an RSA cert at startup; that keygen is one of
+  # the FIPS crash sites on arm64. Not needed for the PoC.
+  metrics:
+    enabled: false
