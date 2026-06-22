@@ -1,0 +1,31 @@
+# Consumer for the JWT plan, declared entirely in git. Unlike the API-key
+# subscription (which needed a runtime-minted key kept out of git), a JWT
+# subscription carries no secret: the credential is the caller's own signed
+# token. The gateway links a token to this application by matching the token's
+# client_id claim to spec.settings.app.clientId.
+apiVersion: gravitee.io/v1alpha1
+kind: Application
+metadata:
+  name: echo-jwt-consumer
+  namespace: gravitee
+spec:
+  contextRef:
+    name: apim-context
+  name: "Echo JWT Consumer"
+  description: "Demo consumer for the Echo API that authenticates with a JWT."
+  settings:
+    app:
+      type: WEB
+      clientId: "echo-jwt-client"
+---
+apiVersion: gravitee.io/v1alpha1
+kind: Subscription
+metadata:
+  name: echo-jwt-sub
+  namespace: gravitee
+spec:
+  api:
+    name: echo-api
+  application:
+    name: echo-jwt-consumer
+  plan: JWT

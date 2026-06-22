@@ -78,3 +78,31 @@ spec:
       status: PUBLISHED
       security:
         type: API_KEY
+    # Second plan, a different auth method on the same API. The gateway picks the
+    # plan by the credential the caller presents: an X-Gravitee-Api-Key header
+    # matches API_KEY, a Bearer JWT matches this one. The gateway validates the
+    # RS256 signature itself with the public key below (the private half lives in
+    # the gitignored .env and is used only to mint demo tokens). Because the
+    # credential is the caller's own token, the subscription is fully declarative,
+    # no secret committed to git, unlike the API-key plan.
+    JWT:
+      name: "JWT plan"
+      description: "Validates externally issued RS256 JWTs; subscription needs no committed secret."
+      status: PUBLISHED
+      security:
+        type: "JWT"
+        configuration:
+          signature: "RSA_RS256"
+          publicKeyResolver: "GIVEN_KEY"
+          resolverParameter: |
+            -----BEGIN PUBLIC KEY-----
+            MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6rN3ZrGFvU/KpdpfR/j0
+            PV+S28MdJ9rE/UH0nmUzeM6i5fq1DBLoVcn2l6p/1nTnCUlF9z2yyCbe25d5mZxZ
+            uV8CMggTGx7qj1Q8PIl0IFWcBJIz/fNp5mkFEnl/1/keeLIuLVC4dUNzG4Y2TRbe
+            iHM9r1RvdgqpaXza489Ewcvtoyngy5Vd2OiB25PRs5+KQDdsy97oSKide87VrpuT
+            7FkbR7lYE6+hRuJoZML74HrAzYB7TjHv6oBWE7xX0VT0Hf6GAZDCsBUSR9ckqYYj
+            VY1PqnffP5jJqBnJPJNshLbyPX9yOO+mcxUrul2HeZ0Wnsx7nlX2STpWckjbJlix
+            zwIDAQAB
+            -----END PUBLIC KEY-----
+          userClaim: "sub"
+          clientIdClaim: "client_id"
