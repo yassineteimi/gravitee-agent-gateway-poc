@@ -31,8 +31,18 @@ spec:
       endpoints:
         - name: echo-backend
           type: http-proxy
+          # GKO 4.11 requires these explicitly (the published quickstart omits
+          # them): the endpoint does not inherit shared group config, and is not
+          # a secondary/failover endpoint.
+          inheritConfiguration: false
+          secondary: false
           configuration:
             target: http://echo-server:80
+  # Required by the operator: without it the validating webhook dereferences a
+  # nil pointer and panics (the published quickstart omits it).
+  flowExecution:
+    mode: DEFAULT
+    matchRequired: false
   plans:
     keyless:
       name: "Keyless"

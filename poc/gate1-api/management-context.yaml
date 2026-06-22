@@ -11,7 +11,9 @@ metadata:
 spec:
   # Qualified service name: GKO runs in the gko-system namespace, so the short
   # name does not resolve. <service>.<namespace> reaches the Management API.
-  baseUrl: http://gravitee-apim-api.gravitee:83/management
+  # baseUrl is the host:port only, with NO /management suffix: GKO appends the
+  # /management/v2/... path itself (a suffix here yields /management/management).
+  baseUrl: http://gravitee-apim-api.gravitee:83
   environmentId: DEFAULT
   organizationId: DEFAULT
   auth:
