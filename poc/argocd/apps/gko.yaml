@@ -1,0 +1,34 @@
+# Gravitee Kubernetes Operator (GKO). Installs the operator + its CRDs
+# (ApiV4Definition, ManagementContext, Application, Subscription, ...). From M1
+# on, APIs are declared as Kubernetes resources in git and reconciled by GKO,
+# which pushes them to the Management API so they also appear in the Console and
+# Developer Portal. sync-wave -1 makes the operator (and its CRDs) land before
+# the Gate 1 custom resources that depend on them.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gko
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  source:
+    repoURL: https://helm.gravitee.io
+    chart: gko
+    targetRevision: 4.11.10
+    helm:
+      values: |
+        manager:
+          scope:
+            cluster: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gko-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
