@@ -44,10 +44,24 @@ if [ -z "${LICENSE_FILE}" ] && [ -n "${GRAVITEE_LICENSE:-}" ]; then
 fi
 
 if [ -n "${LICENSE_FILE}" ]; then
+  # Gravitee reads license.key as a BINARY license3j file. What you are handed
+  # (Gravitee Cloud, the "copy your license" field, the value the chart wants in
+  # license.key) is that file rendered as base64 text. Feeding the text straight
+  # in gets you "serialized license is corrupt" at gateway startup, so decode it
+  # here when the file is base64 text and pass a binary file through untouched.
+  LICENSE_BIN="$(mktemp)"
+  trap 'rm -f "${LICENSE_BIN}"' EXIT
+  if tr -d '\n\r' < "${LICENSE_FILE}" | grep -qE '^[A-Za-z0-9+/]+={0,2}$'; then
+    echo "License file is base64 text: decoding to the binary form Gravitee expects"
+    tr -d '\n\r' < "${LICENSE_FILE}" | base64 -d > "${LICENSE_BIN}"
+  else
+    cat "${LICENSE_FILE}" > "${LICENSE_BIN}"
+  fi
+
   echo "Injecting secret: gravitee-license (namespace ${NS}, from $(basename "${LICENSE_FILE}"))"
   kubectl create secret generic gravitee-license \
     --namespace "${NS}" \
-    --from-file=licensekey="${LICENSE_FILE}" \
+    --from-file=licensekey="${LICENSE_BIN}" \
     --dry-run=client -o yaml | kubectl apply -f -
 else
   echo "No license found (skipping gravitee-license). Enterprise gates stay off."
