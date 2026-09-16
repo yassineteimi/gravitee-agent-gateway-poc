@@ -1,8 +1,11 @@
-# OSS values overlay for graviteeio/apim 4.11.11 on a local kind homelab.
+# Values overlay for graviteeio/apim 4.11.11 on a local kind homelab.
 #
-# No license is supplied here, so Enterprise features (AI Gateway, Kafka
-# Gateway) stay off by design. The OSS->EE upgrade (license injection) is a
-# later milestone. Datastores are the chart's bundled subcharts, sized down
+# The Enterprise license is NOT in this file. The chart only mounts its own
+# license secret when `license.key` is set here, and that value is the signed
+# key itself, so the documented path would publish the license in git. Instead
+# poc/scripts/inject-secrets.sh creates the `gravitee-license` secret from a
+# gitignored key file and the gateway/api extraVolumes below mount it at the
+# path each component reads. Datastores are the chart's bundled subcharts, sized down
 # hard for a 16 GiB Colima VM: a single-member MongoDB replica set and a
 # single-node Elasticsearch.
 
@@ -91,6 +94,20 @@ api:
       ingressClassName: nginx
       hosts:
         - console.gravitee.local
+  # Same license mount for the Management API: it is what gates the Enterprise
+  # policies in the Console and reports the license in the UI.
+  extraVolumes: |
+    - name: licensekey
+      secret:
+        secretName: gravitee-license
+        optional: true
+        items:
+          - key: licensekey
+            path: license.key
+  extraVolumeMounts: |
+    - name: licensekey
+      mountPath: /opt/graviteeio-management-api/license
+      readOnly: true
 
 ui:
   ingress:
@@ -115,3 +132,18 @@ gateway:
     ingressClassName: nginx
     hosts:
       - gateway.gravitee.local
+  # Enterprise license, mounted out-of-band (see the header note). The gateway
+  # reads it from ${gravitee.home}/license/license.key at startup, so a license
+  # change needs a rollout restart, not just a secret update.
+  extraVolumes: |
+    - name: licensekey
+      secret:
+        secretName: gravitee-license
+        optional: true
+        items:
+          - key: licensekey
+            path: license.key
+  extraVolumeMounts: |
+    - name: licensekey
+      mountPath: /opt/graviteeio-gateway/license
+      readOnly: true

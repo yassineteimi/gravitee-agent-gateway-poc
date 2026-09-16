@@ -5,9 +5,20 @@
 *.token
 *.key
 *-key.json
-*.license
 kubeconfig
 *.kubeconfig
+
+# ---- Gravitee EE license key (NEVER commit: it is signed, company-bound and
+# carries an identifiable contact email) ----
+*.license
+*.licence
+licence.txt
+license.txt
+licence*.txt
+license*.txt
+*license*.key
+gravitee-license*
+gravitee-licence*
 
 # ---- MkDocs build output ----
 site/
