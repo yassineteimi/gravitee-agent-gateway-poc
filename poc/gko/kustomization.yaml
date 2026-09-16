@@ -7,10 +7,36 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# The CRDs are vendored here on purpose. The GKO Helm chart does NOT ship them
+# (neither in crds/ nor in templates/), so during M1 they were applied by hand
+# from the operator release and drifted out of GitOps: the cluster was still
+# running the 4.11.9 bundle while everything else was declared. Vendoring the
+# official custom-resource-definitions bundle from the matching release tag puts
+# them back under ArgoCD, and makes a CRD change a reviewable diff. The Gateway
+# API CRDs that ship in the same bundle are deliberately left out: we do not use
+# the operator's Gateway API integration, and they are cluster-wide resources
+# that would belong to the cluster, not to this PoC.
+resources:
+  - crds/gravitee.io_apidefinitions.yaml
+  - crds/gravitee.io_apiresources.yaml
+  - crds/gravitee.io_apiv4definitions.yaml
+  - crds/gravitee.io_applications.yaml
+  - crds/gravitee.io_dictionaries.yaml
+  - crds/gravitee.io_documentations.yaml
+  - crds/gravitee.io_gatewayclassparameters.yaml
+  - crds/gravitee.io_groups.yaml
+  - crds/gravitee.io_kafkaroutes.yaml
+  - crds/gravitee.io_managementcontexts.yaml
+  - crds/gravitee.io_notifications.yaml
+  - crds/gravitee.io_portallistings.yaml
+  - crds/gravitee.io_portals.yaml
+  - crds/gravitee.io_sharedpolicygroups.yaml
+  - crds/gravitee.io_subscriptions.yaml
+
 helmCharts:
   - name: gko
     repo: https://helm.gravitee.io
-    version: 4.11.10
+    version: 4.12.19
     releaseName: gko
     namespace: gko-system
     valuesFile: values.yaml

@@ -1,4 +1,4 @@
-# Values overlay for graviteeio/apim 4.11.11 on a local kind homelab.
+# Values overlay for graviteeio/apim 4.12.19 on a local kind homelab.
 #
 # The Enterprise license is NOT in this file. The chart only mounts its own
 # license secret when `license.key` is set here, and that value is the signed
