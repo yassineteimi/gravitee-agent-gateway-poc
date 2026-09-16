@@ -1,0 +1,87 @@
+# Gate 2, first API: an LLM Proxy. LLM_PROXY is a first-class v4 API type in
+# APIM 4.11 (alongside PROXY, MESSAGE, NATIVE, MCP_PROXY and A2A_PROXY), served
+# by its own reactor, so this is not an HTTP proxy with LLM policies bolted on:
+# the gateway parses the OpenAI-shaped payload, knows which model was asked for
+# and counts the tokens that came back.
+#
+# The backend is NVIDIA's hosted NIM, which speaks the OpenAI API, hence
+# provider OPEN_AI_COMPATIBLE. The provider credential is NOT in this file: it
+# is resolved at runtime from a Kubernetes Secret through Gravitee's secret
+# provider (see poc/scripts/inject-secrets.sh and the `secrets:` block in
+# poc/helm/gravitee-values.yaml).
+#
+# This first cut is deliberately keyless so the proxy path can be proven on its
+# own. The plan, the prompt guardrails and the token rate limit come next.
+apiVersion: gravitee.io/v1alpha1
+kind: ApiV4Definition
+metadata:
+  name: llm-proxy-api
+  namespace: gravitee
+spec:
+  contextRef:
+    name: apim-context
+  name: "LLM Proxy"
+  description: "Gate 2 demo: an LLM Proxy API to NVIDIA hosted NIM, declared via GKO."
+  version: "1.0"
+  type: LLM_PROXY
+  state: STARTED
+  lifecycleState: PUBLISHED
+  visibility: PUBLIC
+  listeners:
+    - type: HTTP
+      paths:
+        - path: "/llm"
+      entrypoints:
+        - type: llm-proxy
+          qos: AUTO
+          configuration:
+            # Count tokens even when the client streams the response, and echo
+            # the count back as X-Token-Usage-* headers so token accounting is
+            # observable from a plain curl.
+            enforceUsage: true
+            injectTokenHeaders: true
+  endpointGroups:
+    - name: default-group
+      type: llm-proxy
+      endpoints:
+        - name: nvidia-nim
+          type: llm-proxy
+          # Same GKO 4.11 requirement as Gate 1: both flags must be explicit.
+          inheritConfiguration: false
+          secondary: false
+          configuration:
+            provider: OPEN_AI_COMPATIBLE
+            target: https://integrate.api.nvidia.com/v1
+            authentication:
+              type: BEARER
+              # Resolved by the Kubernetes secret provider at runtime. Nothing
+              # secret is committed here.
+              bearer: "secret://kubernetes/nvidia-nim-credentials:apiKey"
+            # The catalogue the gateway will serve. Aliases decouple the name a
+            # consumer asks for from the model actually called, which is what
+            # makes provider-side model changes invisible to clients.
+            models:
+              - name: nvidia/nemotron-3.5-lightning-30b-a3b
+                aliases:
+                  - fast
+              - name: nvidia/nemotron-3-super-120b-a12b
+                aliases:
+                  - smart
+              - name: z-ai/glm-5.3-flash
+                aliases:
+                  - flash
+            modelGovernance:
+              # Registered models only: a request for anything not listed above
+              # is rejected by the gateway, not forwarded to the provider.
+              aliasOnly: false
+              modelPattern: ""
+  flowExecution:
+    mode: DEFAULT
+    matchRequired: false
+  plans:
+    KeyLess:
+      name: "Free plan"
+      description: "Open access, for the first proxy test only."
+      security:
+        type: "KEY_LESS"
+  notifyMembers: false

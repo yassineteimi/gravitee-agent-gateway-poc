@@ -67,4 +67,17 @@ else
   echo "No license found (skipping gravitee-license). Enterprise gates stay off."
 fi
 
+# Gate 2 provider credential: the NVIDIA NIM API key. The LLM Proxy API
+# definition in git references it as secret://kubernetes/nvidia-nim-credentials:apiKey
+# and the gateway resolves it at runtime through the Kubernetes secret provider.
+if [ -n "${NVIDIA_API_KEY:-}" ]; then
+  echo "Injecting secret: nvidia-nim-credentials (namespace ${NS})"
+  kubectl create secret generic nvidia-nim-credentials \
+    --namespace "${NS}" \
+    --from-literal=apiKey="${NVIDIA_API_KEY}" \
+    --dry-run=client -o yaml | kubectl apply -f -
+else
+  echo "No NVIDIA_API_KEY in .env (skipping nvidia-nim-credentials). Gate 2 will not reach a provider."
+fi
+
 echo "Done."

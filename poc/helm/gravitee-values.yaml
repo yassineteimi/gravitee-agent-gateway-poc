@@ -75,6 +75,18 @@ es:
     number_of_shards: 1
     number_of_replicas: 0
 
+# ---- Secret provider: resolve credentials from Kubernetes Secrets ----
+# Gate 2 needs a provider credential (the NVIDIA NIM API key) inside an API
+# definition that lives in git. Enabling the bundled Kubernetes secret provider
+# lets the definition reference `secret://kubernetes/<secret>:<key>` instead,
+# so the gateway resolves it at runtime and the key never enters the repo.
+# The chart already grants the components' ServiceAccount get/list/watch on
+# secrets in this namespace (global.roleRules), so no extra RBAC is needed.
+secrets:
+  kubernetes:
+    enabled: true
+    namespace: gravitee
+
 # ---- Control plane: Management API + Console + Developer Portal ----
 # One local host, path-routed: /management, /console, and / (portal).
 api:

@@ -1,0 +1,25 @@
+# Gate 2 resources: the AI / Agent Gateway API definitions (LLM Proxy first,
+# then MCP and A2A). The provider credential they reference is NOT here; the
+# nvidia-nim-credentials Secret is injected from .env by
+# poc/scripts/inject-secrets.sh and resolved at runtime by the gateway's
+# Kubernetes secret provider.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gate2-ai
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/yassineteimi/gravitee-agent-gateway-poc
+    targetRevision: main
+    path: poc/gate2-ai
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gravitee
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
