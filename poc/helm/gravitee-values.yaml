@@ -144,6 +144,15 @@ gateway:
     ingressClassName: nginx
     hosts:
       - gateway.gravitee.local
+  # Let an API definition resolve a secret it references. The secret service
+  # discovers {#secrets.get(...)} refs in a definition and needs a matching
+  # "secret spec" to grant the read; allowing generated specs lets it derive one
+  # from the ref itself instead of requiring a separate spec resource. Without
+  # it the ref resolves to an empty string and the gateway silently calls the
+  # provider with no credential.
+  env:
+    - name: GRAVITEE_API_SECRETS_ALLOWGENERATEDSPECS
+      value: "true"
   # Enterprise license, mounted out-of-band (see the header note). The gateway
   # reads it from ${gravitee.home}/license/license.key at startup, so a license
   # change needs a rollout restart, not just a secret update.
