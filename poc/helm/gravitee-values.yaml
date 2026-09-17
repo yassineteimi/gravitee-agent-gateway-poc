@@ -132,6 +132,14 @@ gateway:
     ingressClassName: nginx
     hosts:
       - gateway.gravitee.local
+  # LLM traffic is slow by nature: the reasoning model in the Gate 2 catalogue
+  # takes over two minutes to answer. There are TWO timeouts to size, and the
+  # platform one is the easy miss: the endpoint's readTimeout (set per API, in
+  # poc/gate2-ai) governs the call to the provider, while this one caps the
+  # whole request at the gateway and returns its own 504 regardless.
+  http:
+    requestTimeout: 180000
+
   # ---- Secret provider for API definitions ----
   # Gate 2 needs a provider credential (the NVIDIA NIM API key) inside an API
   # definition that lives in git, so the definition references it and the
