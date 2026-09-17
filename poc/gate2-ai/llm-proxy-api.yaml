@@ -43,11 +43,21 @@ spec:
   endpointGroups:
     - name: default-group
       type: llm-proxy
+      # The default endpoint readTimeout is 10s, which is shorter than a real
+      # LLM answer: the smallest model here takes about 11s, so every call came
+      # back as a gateway 504. LLM traffic needs timeouts sized for inference,
+      # not for a REST backend.
+      sharedConfiguration:
+        http:
+          connectTimeout: 5000
+          readTimeout: 120000
+          idleTimeout: 120000
       endpoints:
         - name: nvidia-nim
           type: llm-proxy
-          # Same GKO 4.11 requirement as Gate 1: both flags must be explicit.
-          inheritConfiguration: false
+          # Same GKO requirement as Gate 1: both flags must be explicit. True
+          # here so the endpoint picks up the group's shared HTTP options above.
+          inheritConfiguration: true
           secondary: false
           configuration:
             provider: OPEN_AI_COMPATIBLE
