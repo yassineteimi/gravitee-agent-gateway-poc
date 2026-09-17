@@ -1,0 +1,64 @@
+/* ------------------------------------------------------------------ *
+ * Terminal-window styling for command blocks.
+ * Applied to code fences authored as:  ```{ .sh .terminal }
+ * Keeps Material syntax highlighting + copy button, adds a dark
+ * terminal chrome with red/yellow/green traffic-light dots.
+ * Output blocks stay as plain ```text for visual contrast.
+ * ------------------------------------------------------------------ */
+
+.md-typeset .terminal.highlight {
+  position: relative;
+  margin: 1em 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1e1e2e;                         /* terminal background */
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  padding-top: 2.3em;                          /* room for the title bar */
+}
+
+/* Title bar */
+.md-typeset .terminal.highlight::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2.3em;
+  background: #2b2b3c;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Traffic-light dots (red, then yellow + green via box-shadow) */
+.md-typeset .terminal.highlight::after {
+  content: "";
+  position: absolute;
+  top: 0.9em; left: 1em;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: #ff5f56;
+  box-shadow: 18px 0 0 #ffbd2e, 36px 0 0 #27c93f;
+}
+
+/* Make the code surface transparent so the dark window shows through */
+.md-typeset .terminal.highlight pre,
+.md-typeset .terminal.highlight code,
+.md-typeset .terminal.highlight > pre > code {
+  background: transparent !important;
+  color: #e6e6e6;
+}
+
+.md-typeset .terminal.highlight pre {
+  margin: 0;
+  padding: 0.6em 1em 0.9em;
+}
+
+/* Keep the copy button visible on the dark title bar */
+.md-typeset .terminal.highlight .md-clipboard {
+  color: rgba(255, 255, 255, 0.55);
+}
+.md-typeset .terminal.highlight .md-clipboard:hover {
+  color: #ffffff;
+}
+
+/* Readable token colours on the dark background */
+.md-typeset .terminal.highlight .go { color: #b8b8b8; }   /* output */
+.md-typeset .terminal.highlight .gp,
+.md-typeset .terminal.highlight .c1 { color: #6c7086; }   /* prompt / comments */

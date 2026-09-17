@@ -1,0 +1,1226 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A homelab benchmark of Gravitee across three enforcement points: an API Gateway (auth, plans, rate limit and quota), an AI / Agent Gateway (LLM, MCP and A2A governance), and an event-native Kafka Gateway. GitOps-first with ArgoCD on a local Kubernetes cluster: declarative authentication, rate limiting, LLM prompt guardrails and token controls, MCP and agent access control, and access control on native Kafka streams.">
+      
+      
+        <meta name="author" content="Yassine TEIMI">
+      
+      
+      
+        <link rel="prev" href="../api-gateway/">
+      
+      
+        <link rel="next" href="../event-gateway/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.49">
+    
+    
+      
+        <title>Gate 2: AI / Agent Gateway - Gravitee Agent Gateway PoC</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.6f8fc17f.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/terminal.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="lime">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#gate-2-ai-agent-gateway" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Gravitee Agent Gateway PoC" class="md-header__button md-logo" aria-label="Gravitee Agent Gateway PoC" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Gravitee Agent Gateway PoC
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Gate 2: AI / Agent Gateway
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="lime"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6m0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4M7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/yassineteimi/gravitee-agent-gateway-poc" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    yassineteimi/gravitee-agent-gateway-poc
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../prerequisites/" class="md-tabs__link">
+        
+  
+    
+  
+  Prerequisites
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../architecture/" class="md-tabs__link">
+        
+  
+    
+  
+  Architecture
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../bootstrap/" class="md-tabs__link">
+        
+  
+    
+  
+  Bootstrap (M0)
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../api-gateway/" class="md-tabs__link">
+          
+  
+  The Three Gates
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../unified-demo/" class="md-tabs__link">
+        
+  
+    
+  
+  Unified Demo
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../observability/" class="md-tabs__link">
+        
+  
+    
+  
+  Observability
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../evaluation/" class="md-tabs__link">
+        
+  
+    
+  
+  Evaluation Notes
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Gravitee Agent Gateway PoC" class="md-nav__button md-logo" aria-label="Gravitee Agent Gateway PoC" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Gravitee Agent Gateway PoC
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/yassineteimi/gravitee-agent-gateway-poc" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    yassineteimi/gravitee-agent-gateway-poc
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../prerequisites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prerequisites
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bootstrap/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bootstrap (M0)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    The Three Gates
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            The Three Gates
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-gateway/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gate 1: API Gateway
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Gate 2: AI / Agent Gateway
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Gate 2: AI / Agent Gateway
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-enterprise-actually-turns-on" class="md-nav__link">
+    <span class="md-ellipsis">
+      What Enterprise actually turns on
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-version-that-could-not-run-an-llm-proxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      The version that could not run an LLM Proxy
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#declaring-the-llm-proxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Declaring the LLM Proxy
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keeping-the-provider-key-out-of-git" class="md-nav__link">
+    <span class="md-ellipsis">
+      Keeping the provider key out of git
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#timeouts-have-to-be-sized-for-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      Timeouts have to be sized for inference
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-gateway-enforces" class="md-nav__link">
+    <span class="md-ellipsis">
+      What the gateway enforces
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-gate-2-stands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Where Gate 2 stands
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../event-gateway/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gate 3: Event Gateway
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../unified-demo/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Unified Demo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../observability/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Observability
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evaluation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Evaluation Notes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="gate-2-ai-agent-gateway">Gate 2: AI / Agent Gateway</h1>
+<p>The second gate puts the same kind of control in front of <strong>LLM traffic</strong> that
+Gate 1 put in front of a REST API: a declared catalogue of what callers may ask
+for, a credential the caller never sees, and accounting on what each call costs.
+Gravitee treats this as a first-class API type rather than a proxy with policies
+bolted on, so the whole thing is still an <code>ApiV4Definition</code> reconciled by the
+operator from git.</p>
+<p>This chapter covers the <strong>LLM Proxy</strong> to a hosted model provider. The MCP server
+and agent-to-agent sections follow as they are built.</p>
+<pre class="mermaid"><code>flowchart LR
+    git["git: ApiV4Definition\ntype LLM_PROXY"] --&gt; argo[ArgoCD] --&gt; gko[GKO] --&gt; mapi[Management API] --&gt; gw
+    k8s[("Kubernetes Secret\nprovider API key")] -.-&gt;|resolved at runtime| gw
+    client["client\nmodel: nvidia-nim:fast"] --&gt; gw[LLM Proxy reactor]
+    gw --&gt;|"registered model?"| gw
+    gw --&gt; nim["NVIDIA hosted NIM\nOpenAI-compatible API"]</code></pre>
+<h2 id="what-enterprise-actually-turns-on">What Enterprise actually turns on</h2>
+<p>The AI and Kafka gates are Enterprise features, so this milestone is also the
+OSS to EE upgrade. The first surprise is that there is nothing to re-install:</p>
+<div class="admonition success">
+<p class="admonition-title">The OSS image is the EE image</p>
+<p><code>graviteeio/apim-gateway</code> already ships every Enterprise plugin, 141 of them
+in this build, including <code>llm-proxy</code>, <code>mcp-proxy</code>, <code>a2a-proxy</code>, the
+<code>ai-prompt-guard-rails</code> and <code>ai-prompt-token-tracking</code> policies and the whole
+<code>kafka-*</code> family. The license does not deliver code, it unlocks at runtime
+what is already on disk. An OSS to EE upgrade is therefore one file and a
+rollout restart, and the reactors announce themselves in the gateway log:</p>
+<div class="highlight"><span class="filename">Gateway log after the license is mounted</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&gt; llm-proxy-reactor [3.3.9] has been loaded
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>&gt; mcp-proxy-reactor [3.1.6] has been loaded
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&gt; a2a-proxy-reactor [2.1.1] has been loaded
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>&gt; native-kafka-reactor [7.1.0] has been loaded
+</code></pre></div>
+</div>
+<p>Mounting that file takes a detour. The chart creates and mounts its license
+Secret only when <code>license.key</code> is set <strong>in the values file</strong>, and that value is
+the signed key itself, so the documented path means committing the license to
+git. The PoC keeps it out by creating the Secret from a gitignored key file and
+mounting it through the components' <code>extraVolumes</code>:</p>
+<div class="highlight"><span class="filename">poc/helm/gravitee-values.yaml (excerpt)</span><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">gateway</span><span class="p">:</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">extraVolumes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="no">- name: licensekey</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">      </span><span class="no">secret:</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">        </span><span class="no">secretName: gravitee-license</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">        </span><span class="no">optional: true          # a license-free install still starts</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">        </span><span class="no">items:</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">          </span><span class="no">- key: licensekey</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">            </span><span class="no">path: license.key</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="nt">extraVolumeMounts</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">    </span><span class="no">- name: licensekey</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">      </span><span class="no">mountPath: /opt/graviteeio-gateway/license</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">      </span><span class="no">readOnly: true</span>
+</code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">The license file is binary, not the base64 you are given</p>
+<p>Gravitee reads <code>license.key</code> as a binary license3j file, while what you are
+handed (and what the chart's <code>license.key</code> value expects) is that file
+rendered as base64 text. Feeding the text straight in fails at startup with
+<code>IllegalArgumentException: serialized license is corrupt</code>, which says nothing
+about encoding. <code>poc/scripts/inject-secrets.sh</code> detects base64 text and
+decodes it before creating the Secret.</p>
+</div>
+<p>Verification is a single call, and unlike the startup log (which prints the
+licensee's company and contact email) this endpoint returns nothing identifying:</p>
+<div class="terminal highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>$<span class="w"> </span>curl<span class="w"> </span>-s<span class="w"> </span>-u<span class="w"> </span>admin:admin<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>http://console.gravitee.local/management/v2/organizations/DEFAULT/license<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="p">|</span><span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s1">'import sys,json; d=json.load(sys.stdin); print(d["tier"], len(d["packs"]), "packs", len(d["features"]), "features")'</span>
+</code></pre></div>
+<div class="highlight"><span class="filename">Expected output</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>universe 13 packs 112 features
+</code></pre></div>
+<h2 id="the-version-that-could-not-run-an-llm-proxy">The version that could not run an LLM Proxy</h2>
+<p>The first LLM Proxy API declared on APIM <strong>4.11.11</strong> never reached the gateway.
+Deploying it threw a class-loading error and, worse, killed the thread that
+deploys APIs, so from that moment the gateway silently stopped picking up <strong>any</strong>
+API change until it was restarted:</p>
+<div class="highlight"><span class="filename">Gateway log, APIM 4.11.11</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Exception in thread "gio.sync-deployer-0" java.lang.IncompatibleClassChangeError:
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>class com.networknt.schema.resource.DefaultSchemaLoader can not implement
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>com.networknt.schema.resource.SchemaLoader, because it is not an interface
+</code></pre></div>
+<p>The cause is a dependency skew inside the distribution itself. The gateway image
+carries one version of the networknt JSON schema validator on the parent
+classpath, and the bundled LLM Proxy entrypoint plugin carries an older one of
+its own. Parent-first loading mixes the two, and the type changed shape between
+them:</p>
+<table>
+<thead>
+<tr>
+<th>Jar</th>
+<th><code>SchemaLoader</code></th>
+<th><code>DefaultSchemaLoader</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>json-schema-validator-1.5.9</code> (inside <code>entrypoint-llm-proxy 2.10.3</code>)</td>
+<td>interface</td>
+<td>present</td>
+</tr>
+<tr>
+<td><code>json-schema-validator-2.0.0</code> (image <code>lib/ext</code>, parent loader)</td>
+<td>class</td>
+<td>absent</td>
+</tr>
+</tbody>
+</table>
+<p>The plugin's <code>DefaultSchemaLoader</code> declares <code>implements SchemaLoader</code>, resolves
+<code>SchemaLoader</code> from the parent as a class, and the JVM refuses. Comparing the
+published images shows it fixed on both maintained lines, so the answer is to
+move up rather than to patch a classpath:</p>
+<table>
+<thead>
+<tr>
+<th>APIM</th>
+<th>entrypoint-llm-proxy</th>
+<th>networknt it bundles</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4.11.11</td>
+<td>2.10.3</td>
+<td>1.5.9</td>
+<td>broken</td>
+</tr>
+<tr>
+<td>4.11.27</td>
+<td>2.11.3</td>
+<td>2.0.0</td>
+<td>aligned</td>
+</tr>
+<tr>
+<td>4.12.19</td>
+<td>3.3.9</td>
+<td>none, uses the parent</td>
+<td>aligned</td>
+</tr>
+</tbody>
+</table>
+<p>This lab moved to <strong>4.12.19</strong> for APIM and the operator together, which is a
+one-line change per ArgoCD application. Gate 1 kept working across the upgrade
+with no manifest changes.</p>
+<div class="admonition note">
+<p class="admonition-title">The operator's CRDs were not under GitOps</p>
+<p>The GKO Helm chart ships no CRDs at all, in neither <code>crds/</code> nor <code>templates/</code>.
+Milestone 1 applied them by hand, so the cluster quietly kept running the
+CRD bundle of an older operator while every other piece was declared. The
+upgrade was the moment to fix it: the official
+<code>custom-resource-definitions.zip</code> from the matching release tag is now
+vendored in <code>poc/gko/crds/</code> and listed as Kustomize <code>resources</code>, so a CRD
+change is a reviewable diff like everything else. The Gateway API CRDs that
+ship in the same bundle are deliberately left out, since they are cluster
+scoped and not this PoC's to own.</p>
+</div>
+<h2 id="declaring-the-llm-proxy">Declaring the LLM Proxy</h2>
+<p><code>LLM_PROXY</code> is one of the v4 API types, alongside <code>PROXY</code>, <code>MESSAGE</code>, <code>NATIVE</code>,
+<code>MCP_PROXY</code> and <code>A2A_PROXY</code>. It has its own reactor, so the gateway parses the
+OpenAI-shaped payload, knows which model was requested and counts the tokens that
+come back. The backend here is NVIDIA's hosted NIM, which speaks the OpenAI API,
+hence the <code>OPEN_AI_COMPATIBLE</code> provider:</p>
+<div class="highlight"><span class="filename">poc/gate2-ai/llm-proxy-api.yaml (excerpt)</span><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">spec</span><span class="p">:</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LLM_PROXY</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">listeners</span><span class="p">:</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HTTP</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">      </span><span class="nt">paths</span><span class="p">:</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">"/llm"</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">      </span><span class="nt">entrypoints</span><span class="p">:</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">llm-proxy</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">          </span><span class="nt">configuration</span><span class="p">:</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">            </span><span class="nt">enforceUsage</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">        </span><span class="c1"># count tokens even when streaming</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">            </span><span class="nt">injectTokenHeaders</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">  </span><span class="c1"># report the count back to the caller</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">  </span><span class="nt">endpointGroups</span><span class="p">:</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default-group</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">llm-proxy</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">      </span><span class="nt">endpoints</span><span class="p">:</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia-nim</span>
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="w">          </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">llm-proxy</span>
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="w">          </span><span class="nt">inheritConfiguration</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="w">          </span><span class="nt">secondary</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="w">          </span><span class="nt">configuration</span><span class="p">:</span>
+<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="w">            </span><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">OPEN_AI_COMPATIBLE</span>
+<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="w">            </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://integrate.api.nvidia.com/v1</span>
+<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="w">            </span><span class="nt">authentication</span><span class="p">:</span>
+<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a><span class="w">              </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BEARER</span>
+<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a><span class="w">              </span><span class="nt">bearer</span><span class="p">:</span><span class="w"> </span><span class="s">"{#secrets.get('/kubernetes/nvidia-nim-credentials:apiKey')}"</span>
+<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a><span class="w">            </span><span class="nt">models</span><span class="p">:</span>
+<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a><span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia/nemotron-3.5-lightning-30b-a3b</span>
+<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a><span class="w">                </span><span class="nt">aliases</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fast</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a><span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia/nemotron-3-super-120b-a12b</span>
+<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a><span class="w">                </span><span class="nt">aliases</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">smart</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a><span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">z-ai/glm-5.3-flash</span>
+<a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a><span class="w">                </span><span class="nt">aliases</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">flash</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a><span class="w">            </span><span class="nt">modelGovernance</span><span class="p">:</span>
+<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a><span class="w">              </span><span class="nt">aliasOnly</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a><span class="w">              </span><span class="nt">modelPattern</span><span class="p">:</span><span class="w"> </span><span class="s">""</span><span class="w">        </span><span class="c1"># empty: registered models only</span>
+</code></pre></div>
+<p>Two things in that block are the actual governance. The <strong>model catalogue</strong> is a
+closed list: a request for anything not in it is refused by the gateway and never
+forwarded, which is what stops a caller reaching for a model nobody approved or
+budgeted. <strong>Aliases</strong> decouple the name a client sends from the model actually
+called, so swapping the model behind <code>fast</code> is a commit here rather than a change
+in every client.</p>
+<div class="admonition warning">
+<p class="admonition-title">Model names must carry the endpoint name as a prefix</p>
+<p><code>modelGovernance.prefixPolicy.policy</code> defaults to <code>PREFIXED_BOTH</code>, so clients
+ask for <code>nvidia-nim:fast</code>, not <code>fast</code>. That is also why the schema forbids
+<code>:</code> inside an alias. An unprefixed name is rejected exactly like an unknown
+one, with an OpenAI-shaped <code>model_not_found</code>, which reads like a provider
+error while it is in fact the gateway refusing. The policy can be relaxed to
+<code>PREFIXED_ALIAS</code>, <code>PREFIXED_MODEL</code> or <code>NO_PREFIX</code>.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Check the provider catalogue before trusting it</p>
+<p>NVIDIA's <code>/v1/models</code> listing is not what an account can actually call. Every
+Llama model in it is end-of-life and answers <code>410 Gone</code>, and several others
+return <code>404 Function ... Not found for account</code>. Probe a model with a real
+completion before putting it in a gateway catalogue.</p>
+</div>
+<h2 id="keeping-the-provider-key-out-of-git">Keeping the provider key out of git</h2>
+<p>The API definition lives in a public repository, so the NVIDIA key is referenced,
+not written. The gateway resolves it at runtime from a Kubernetes Secret created
+by <code>poc/scripts/inject-secrets.sh</code> from the gitignored <code>.env</code>. Getting there took
+three wrong turns, and every one of them failed quietly:</p>
+<table>
+<thead>
+<tr>
+<th>What was written</th>
+<th>What happened</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>secret://kubernetes/name:apiKey</code></td>
+<td>Passed through as a literal string and <strong>sent to the provider as the token</strong>. NVIDIA answered 401.</td>
+</tr>
+<tr>
+<td><code>{#secrets.get('secret://kubernetes/name:apiKey')}</code></td>
+<td><code>GrantService: no spec found for ref</code>, the expression resolved to an empty string, and the gateway called the provider <strong>with no Authorization header at all</strong>.</td>
+</tr>
+<tr>
+<td>Provider declared only under the top-level <code>secrets:</code> block</td>
+<td>The plugin loaded but no provider was deployed for APIs. The request <strong>hung forever</strong>, blocking a Vert.x event loop with <code>VertxException: Thread blocked</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>The two rules behind those failures are worth stating plainly. First, inside an
+API definition a secret is referenced with the <strong>expression language form and a
+path</strong>, because the secret service discovers references by scanning the
+definition for the literal <code>{#secrets.get(</code>; a bare URI is just text to it.
+Second, secrets used by API definitions need their providers declared in a
+<strong>different scope</strong> from the top-level <code>secrets:</code> block, which only resolves
+secrets inside <code>gravitee.yml</code> itself:</p>
+<div class="highlight"><span class="filename">poc/helm/gravitee-values.yaml (excerpt)</span><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">gateway</span><span class="p">:</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">api</span><span class="p">:</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="nt">secrets</span><span class="p">:</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">      </span><span class="nt">allowGeneratedSpecs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">   </span><span class="c1"># derive the secret spec from the reference</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">      </span><span class="nt">providers</span><span class="p">:</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kubernetes</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">          </span><span class="nt">plugin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kubernetes</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">          </span><span class="nt">configuration</span><span class="p">:</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">            </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">            </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gravitee</span>
+</code></pre></div>
+<div class="highlight"><span class="filename">Gateway log, provider correctly declared</span><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Deploying secret provider [kubernetes] of type [kubernetes] for environment [*]...
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>Secret provider [kubernetes] of type [kubernetes] for environment [*]: DEPLOYED
+</code></pre></div>
+<p>No extra RBAC is needed: the chart already grants the components' ServiceAccount
+<code>get</code>, <code>list</code> and <code>watch</code> on Secrets in the namespace.</p>
+<h2 id="timeouts-have-to-be-sized-for-inference">Timeouts have to be sized for inference</h2>
+<p>A REST backend answers in milliseconds; a language model does not. The fastest
+model in this catalogue takes about eleven seconds and the reasoning one over two
+minutes, and <strong>three independent layers</strong> will each cut the call at their own
+default and return their own 504:</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Default</th>
+<th>How to recognise its 504</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Endpoint <code>sharedConfiguration.http.readTimeout</code></td>
+<td>10s</td>
+<td>Gravitee headers present, log says <code>NoStackTraceTimeoutException ... 10000ms</code></td>
+</tr>
+<tr>
+<td>Gateway <code>http.requestTimeout</code></td>
+<td>30s</td>
+<td>Body is <code>{"message":"Request timeout","http_status_code":504}</code></td>
+</tr>
+<tr>
+<td>nginx ingress <code>proxy-read-timeout</code></td>
+<td>60s</td>
+<td><strong>No</strong> <code>X-Gravitee-*</code> headers on the response</td>
+</tr>
+</tbody>
+</table>
+<p>Chasing this one layer at a time is a waste of an afternoon, so all three are
+raised together: 170s on the endpoint, 180s on the gateway and 180s on the
+ingress, keeping the endpoint just under the platform so a slow provider surfaces
+as an endpoint error instead of the platform cutting first.</p>
+<div class="admonition note">
+<p class="admonition-title">Group-level shared configuration needs inheritance turned on</p>
+<p>Timeouts sit in the endpoint group's <code>sharedConfiguration</code>, which an endpoint
+only picks up when <code>inheritConfiguration: true</code>. Gate 1 sets it to <code>false</code>,
+so this is one of the rare places the two gates differ. The CRD also exposes
+a group-level <code>http:</code> field, but the operator's validating webhook rejects
+it. When a change is applied and ArgoCD keeps reporting the new revision as
+<code>OutOfSync</code>, check the webhook: it can panic on a nil pointer, which leaves
+the resource silently at its previous content. <code>kubectl apply
+--dry-run=server</code> tests a manifest shape against the webhook without touching
+the cluster.</p>
+</div>
+<h2 id="what-the-gateway-enforces">What the gateway enforces</h2>
+<p>End to end, on the live lab. A registered alias passes and comes back with the
+token count and the model that actually served it:</p>
+<div class="terminal highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>$<span class="w"> </span>curl<span class="w"> </span>-s<span class="w"> </span>-D<span class="w"> </span>-<span class="w"> </span>-o<span class="w"> </span>/tmp/llm.json<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span>--resolve<span class="w"> </span>gateway.gravitee.local:80:127.0.0.1<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span>http://gateway.gravitee.local/llm/chat/completions<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span>-H<span class="w"> </span><span class="s1">'Content-Type: application/json'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">    </span>-d<span class="w"> </span><span class="s1">'{"model":"nvidia-nim:fast","messages":[{"role":"user","content":"In one short sentence, what is an API gateway?"}],"max_tokens":60}'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-iE<span class="w"> </span><span class="s1">'HTTP/|X-LLM-Proxy'</span>
+</code></pre></div>
+<div class="highlight"><span class="filename">Expected output</span><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>HTTP/1.1 200 OK
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>X-LLM-Proxy-Tokens-Sent: 27
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>X-LLM-Proxy-Tokens-Received: 60
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>X-LLM-Proxy-Model: nvidia/nemotron-3.5-lightning-30b-a3b
+</code></pre></div>
+<p>Those headers are the foundation the token rate limit and the cost controls build
+on: the gateway is counting, not just forwarding. Note that the entrypoint emits
+<code>X-LLM-Proxy-Tokens-*</code>, while the plugin's own configuration schema describes
+them as <code>X-Token-Usage-*</code>.</p>
+<p>Running the whole matrix shows both halves of the gate, routing and refusal:</p>
+<div class="highlight"><span class="filename">Every model the catalogue accepts, and two it does not</span><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>nvidia-nim:fast     200   nvidia/nemotron-3.5-lightning-30b-a3b    11s
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>nvidia-nim:smart    200   nvidia/nemotron-3-super-120b-a12b         1s
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>nvidia-nim:flash    200   z-ai/glm-5.3-flash                      165s
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>nvidia-nim:gpt-4o   400   unregistered model, refused by the gateway
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>fast                400   unprefixed name, refused by the gateway
+</code></pre></div>
+<p>The two rejections never leave the cluster. That is the difference between a
+gateway and a reverse proxy in front of an LLM: the model catalogue is policy,
+enforced before a single token is spent.</p>
+<h2 id="where-gate-2-stands">Where Gate 2 stands</h2>
+<p>The LLM Proxy is live, declared from git, with the provider credential resolved
+at runtime and token accounting on every response. Still to come in this gate,
+each built the same declarative way:</p>
+<ul>
+<li>a <strong>plan</strong> on the LLM API, so the caller authenticates as in Gate 1,</li>
+<li><strong>prompt guardrails</strong> and a <strong>token rate limit</strong>, the policies the token
+  headers above make possible,</li>
+<li>an API exposed as an <strong>MCP server</strong> with method-level access control,</li>
+<li><strong>agent-to-agent</strong> governance.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy; 2026 <a href="https://github.com/yassineteimi" target="_blank" rel="noopener">Yassine TEIMI</a>
+
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/yassineteimi" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1M480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2m-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3m-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://linkedin.com/in/yassine-teimi" target="_blank" rel="noopener" title="linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3M135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5m282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "navigation.top", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotation", "content.code.copy"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.88dd0f4e.min.js"></script>
+      
+    
+  </body>
+</html>
