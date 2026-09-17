@@ -55,12 +55,13 @@ spec:
             authentication:
               type: BEARER
               # Resolved by the Kubernetes secret provider at runtime. Nothing
-              # secret is committed here. Inside an API definition the reference
-              # MUST be the EL form: the gateway's secret service discovers refs
-              # by scanning the definition for the literal "{#secrets.get(", so a
-              # bare secret:// URI (the gravitee.yml form) is passed through as a
-              # literal string and ends up sent to the provider as the token.
-              bearer: "{#secrets.get('secret://kubernetes/nvidia-nim-credentials:apiKey')}"
+              # secret is committed here. Two traps, both silent: inside an API
+              # definition the reference MUST be the EL form (the secret service
+              # discovers refs by scanning for the literal "{#secrets.get(", so a
+              # bare secret:// URI is passed through and sent to the provider as
+              # the token), and the argument is a PATH "/provider/name:key", not
+              # a secret:// URI, which resolves to an empty string instead.
+              bearer: "{#secrets.get('/kubernetes/nvidia-nim-credentials:apiKey')}"
             # The catalogue the gateway will serve. Aliases decouple the name a
             # consumer asks for from the model actually called, which is what
             # makes provider-side model changes invisible to clients.
