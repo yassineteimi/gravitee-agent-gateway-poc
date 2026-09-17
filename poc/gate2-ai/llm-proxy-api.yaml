@@ -44,14 +44,18 @@ spec:
     - name: default-group
       type: llm-proxy
       # The default endpoint readTimeout is 10s, which is shorter than a real
-      # LLM answer: the smallest model here takes about 11s, so every call came
-      # back as a gateway 504. LLM traffic needs timeouts sized for inference,
-      # not for a REST backend.
+      # LLM answer: the fastest model here takes about 11s and the reasoning one
+      # over two minutes, so every call came back as a 504. LLM traffic needs
+      # timeouts sized for inference, not for a REST backend, and there are
+      # THREE layers to size: this one, the gateway's http.requestTimeout and
+      # the ingress proxy timeout (both in poc/helm/gravitee-values.yaml). Kept
+      # just under the platform value so a slow provider surfaces as an endpoint
+      # error rather than the platform cutting the request first.
       sharedConfiguration:
         http:
           connectTimeout: 5000
-          readTimeout: 120000
-          idleTimeout: 120000
+          readTimeout: 170000
+          idleTimeout: 170000
       endpoints:
         - name: nvidia-nim
           type: llm-proxy
