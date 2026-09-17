@@ -75,18 +75,6 @@ es:
     number_of_shards: 1
     number_of_replicas: 0
 
-# ---- Secret provider: resolve credentials from Kubernetes Secrets ----
-# Gate 2 needs a provider credential (the NVIDIA NIM API key) inside an API
-# definition that lives in git. Enabling the bundled Kubernetes secret provider
-# lets the definition reference `secret://kubernetes/<secret>:<key>` instead,
-# so the gateway resolves it at runtime and the key never enters the repo.
-# The chart already grants the components' ServiceAccount get/list/watch on
-# secrets in this namespace (global.roleRules), so no extra RBAC is needed.
-secrets:
-  kubernetes:
-    enabled: true
-    namespace: gravitee
-
 # ---- Control plane: Management API + Console + Developer Portal ----
 # One local host, path-routed: /management, /console, and / (portal).
 api:
@@ -144,15 +132,30 @@ gateway:
     ingressClassName: nginx
     hosts:
       - gateway.gravitee.local
-  # Let an API definition resolve a secret it references. The secret service
-  # discovers {#secrets.get(...)} refs in a definition and needs a matching
-  # "secret spec" to grant the read; allowing generated specs lets it derive one
-  # from the ref itself instead of requiring a separate spec resource. Without
-  # it the ref resolves to an empty string and the gateway silently calls the
-  # provider with no credential.
-  env:
-    - name: GRAVITEE_API_SECRETS_ALLOWGENERATEDSPECS
-      value: "true"
+  # ---- Secret provider for API definitions ----
+  # Gate 2 needs a provider credential (the NVIDIA NIM API key) inside an API
+  # definition that lives in git, so the definition references it and the
+  # gateway resolves it at runtime. Two distinct scopes exist and only this one
+  # works here: the top-level `secrets:` block of gravitee.yml resolves secrets
+  # inside gravitee.yml itself, while secrets referenced from an API definition
+  # need their providers declared under `api.secrets.providers`. Declaring only
+  # the top-level block loads the plugin but deploys no provider for APIs, and
+  # the reference then hangs the request instead of failing.
+  # The chart already grants the components' ServiceAccount get/list/watch on
+  # secrets in this namespace (global.roleRules), so no extra RBAC is needed.
+  api:
+    secrets:
+      # The secret service needs a "secret spec" to grant a definition's read.
+      # Generated specs let it derive one from the reference itself instead of
+      # requiring a separate spec resource; without this the reference resolves
+      # to an empty string and the gateway calls the provider with no credential.
+      allowGeneratedSpecs: true
+      providers:
+        - id: kubernetes
+          plugin: kubernetes
+          configuration:
+            enabled: true
+            namespace: gravitee
   # Enterprise license, mounted out-of-band (see the header note). The gateway
   # reads it from ${gravitee.home}/license/license.key at startup, so a license
   # change needs a rollout restart, not just a secret update.
