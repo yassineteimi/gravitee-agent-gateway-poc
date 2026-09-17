@@ -48,7 +48,7 @@ small Kustomize overlay that inflates the chart and patches the variable in:
 helmCharts:
   - name: gko
     repo: https://helm.gravitee.io
-    version: 4.11.10
+    version: 4.12.19
     releaseName: gko
     namespace: gko-system
     valuesFile: values.yaml
@@ -125,8 +125,8 @@ published quickstart omits are required by the operator, and without the
       endpoints:
         - name: echo-backend
           type: http-proxy
-          inheritConfiguration: false   # required by GKO 4.11
-          secondary: false              # required by GKO 4.11
+          inheritConfiguration: false   # required by the operator
+          secondary: false              # required by the operator
           configuration:
             target: http://echo-server:80
   flowExecution:                        # absent => webhook nil-pointer panic

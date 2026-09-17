@@ -30,8 +30,17 @@ reproducible:
 | kubectl | 1.31.2 | Cluster CLI |
 | Helm | 4.2.2 | Chart tooling (ArgoCD renders charts itself) |
 | ArgoCD | 3.4.3 | GitOps engine (client and server pinned together) |
-| Gravitee APIM chart | 4.11.11 | `graviteeio/apim`, app version 4.11.11 |
+| Gravitee APIM chart | 4.12.19 | `graviteeio/apim`, app version 4.12.19 |
 | ingress-nginx chart | 4.15.1 | Ingress controller |
+
+!!! note "This bootstrap started on 4.11.11"
+    Milestone 0 installed APIM 4.11.11, and the lab was later moved to 4.12.19
+    because 4.11.11 cannot deploy an LLM Proxy API at all: a class-loading
+    conflict inside that distribution kills the gateway's API deployment thread.
+    The versions above are the ones to install today, and the
+    [AI / Agent Gateway chapter](gates/ai-agent-gateway.md) documents the bug and
+    how it was diagnosed. Nothing else in this chapter changes: the same values,
+    the same workarounds and the same commands apply.
 
 Gravitee's footprint is heavier than a typical gateway: a Management API, a
 Console UI, a Developer Portal, the Gateway itself, plus a MongoDB
@@ -50,7 +59,7 @@ flowchart TD
         root["root-app<br/>(app-of-apps)"]
         ing["ingress-nginx 4.15.1"]
         mongo["MongoDB 6.0<br/>(standalone)"]
-        apim["Gravitee APIM OSS 4.11.11<br/>api · gateway · console · portal"]
+        apim["Gravitee APIM 4.12.19<br/>api · gateway · console · portal"]
         es["Elasticsearch<br/>(single node)"]
     end
     repo["github.com/yassineteimi/<br/>gravitee-agent-gateway-poc"]
@@ -227,7 +236,7 @@ spec:
   sources:
     - repoURL: https://helm.gravitee.io
       chart: apim
-      targetRevision: 4.11.11
+      targetRevision: 4.12.19
       helm:
         valueFiles:
           - $values/poc/helm/gravitee-values.yaml

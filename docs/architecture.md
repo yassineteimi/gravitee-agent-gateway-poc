@@ -76,9 +76,11 @@ The PoC builds one enforcement point per gate on this same platform:
 | **3: Event** | Native Kafka secured by a plan, protocol mediation | Enterprise |
 
 Gate 1 runs entirely on the open-source edition. Gates 2 and 3 are Enterprise
-features, unlocked by the trial license covered in the
+features, unlocked by the license covered in the
 [Prerequisites](prerequisites.md); applying that license is the OSS-to-Enterprise
-upgrade shown at the start of Gate 2.
+upgrade shown at the start of Gate 2. The distributed images already contain the
+Enterprise plugins, so that upgrade turns out to be a license file and a restart
+rather than a different install.
 
 With the architecture in view, the build starts by
 [bootstrapping the platform](bootstrap.md).

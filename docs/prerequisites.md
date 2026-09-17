@@ -61,7 +61,7 @@ $ colima start --cpu 8 --memory 16 --disk 60
 | What | Needed for | Notes |
 | --- | --- | --- |
 | Nothing | **Gate 1 (API)** | The whole API gateway, plans, rate limiting, and Developer Portal run on the open-source edition. |
-| Gravitee EE trial license | **Gates 2 and 3** | The AI Gateway and Kafka Gateway are Enterprise features. A 14-day free trial unlocks them; the clock starts when the license is applied, so request it just before Gate 2. |
+| Gravitee Enterprise license | **Gates 2 and 3** | The AI Gateway and Kafka Gateway are Enterprise features. Gravitee offers a free trial, whose window is short enough that it is worth requesting just before Gate 2; this lab ran on a longer-lived Enterprise license. The file you receive is base64 text that must be decoded before it becomes the `license.key` the gateway reads, which the [AI / Agent Gateway chapter](gates/ai-agent-gateway.md) covers. |
 | NVIDIA NIM API key (`nvapi-...`) | **Gate 2 (AI)** | Free from build.nvidia.com. The LLM traffic is routed to NVIDIA hosted NIMs (OpenAI-compatible). |
 
 ## Secrets
